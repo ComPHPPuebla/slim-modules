@@ -7,7 +7,7 @@ It provides the following features:
 * Ability to group and configure your controllers in modules
 * Ability to group all your application controllers and services
 
-# Installation
+## Installation
 
 Using composer
 
@@ -15,9 +15,9 @@ Using composer
 $ composer require comphppuebla/slim-modules:~1.0@dev
 ```
 
-# Usage
+## Usage
 
-## Registering services
+### Registering services
 
 You can register the services of your module in a single class implementing
 `ComPHPPuebla\Slim\ServiceProvider`.
@@ -68,7 +68,7 @@ $services->configure($app);
 $app->run();
 ```
 
-# Registering routes
+### Registering routes
 
 Following the example, you would have routes to update the information of your products.
 In order to group the routes of your module in a single class, you need to implement
@@ -110,7 +110,7 @@ as the 2 last arguments to your controller method.
 
 Let's suppose you have the following controller:
 
-```
+```php
 namespace Modules\ProductCatalog\Controllers;
 
 use Twig_Environment as View
@@ -150,3 +150,257 @@ class ProductController
     }
 }
 ```
+
+In order to add your controllers to your application you would register them in the
+`public/index.php` file.
+
+```php
+require 'vendor/autoload.php';
+
+$app = new \Slim\Slim();
+
+/* Register your services first */
+
+$services = new Modules\ProductCatalog\ProductCatalogControllers();
+$services->register($app, new ComPHPPuebla\Slim\ControllerResolver());
+
+
+$app->run();
+```
+
+One thing to note is that your controllers methods will always have the following
+signature style by default:
+
+```php
+method(/* $route_param_1, $route_param_2, ... $route_param_n */ $request, $app)
+```
+
+The route params are optional, they depend on your route, but the request and the
+application arguments will be passed by default.
+
+### Arguments converters
+
+You can pass an anonymous function to the `ControllerResolver` in order to modify the
+arguments passed to your controller. Suppose for instance that your method
+`Modules\ProductCatalog\Controllers\ProductController::showProductForm` does not need
+the request argument. You could remove it by registering your route the following way:
+
+```php
+# Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app->get('/catalog/product/edit/:id', $resolver->resolve(
+        $app, 'catalog.product_controller:showProductForm', function (array $arguments) {
+            // $arguments[0] is the product ID
+            unset($arguments[1]); // Remove the request
+            // $arguments[2] is the application which we need, because of the call to `notFound`
+
+            return $arguments;
+        })
+    ));
+
+    /* ... */
+}
+```
+
+Method `showProductForm` would result in the following call
+`showProductForm($productId, Slim $app)`. The converter function must return an `array`
+with the arguments that will be passed to your controller. In the example above we
+removed an unnecessary argument, but we can replace the arguments completely.
+
+Suppose you have a controller in your catalog to do products searching, this controller
+uses the product category and a group of keywords separated by spaces to perform the
+search. Also suppose that this search criteria is passed through the query string.
+And that we are using the following criteria object:
+
+```php
+use Modules\ProductCatalog\Criteria;
+
+class ProductSearchCriteria
+{
+    /** @var null|string */
+    protected $category;
+
+    /** @var null|string */
+    protected $keywords;
+
+    /**
+     * @param string $category
+     * @param string $keywords
+     */
+    public function __construct($category = null, $keywords = null)
+    {
+        $this->category = $category;
+        $this->keywords = $keywords;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function hasCategory()
+    {
+        return !is_null($this->category);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function category()
+    {
+        return $this->category;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function hasKeywords()
+    {
+        return !is_null($this->keywords);
+    }
+
+    /**
+     * @return null|string
+     */
+    public function keywords()
+    {
+        return $this->keyword;
+    }
+}
+```
+
+Our controller should do something similar to the following:
+
+```php
+namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(Request $request)
+    {
+        $results = $this->catalog->productsMatching(new ProductSearchCriteria(
+            $request->get('category'), $request->get('keywords')
+        ));
+
+        // Pass your results to the view
+    }
+}
+```
+
+We could use the criteria object directly using the following arguments converter:
+
+```php
+# Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app->get('/catalog/product/search', $resolver->resolve(
+        $app, 'catalog.product_controller:searchProducts', function (array $arguments) {
+            // $arguments[0] is the request. Because our route does not have parameters
+
+            return [new ProductSearchCriteria(
+                $arguments[0]->get('category'), $arguments[0]->get('keywords')
+            )];
+        })
+    ));
+
+    /* ... */
+}
+```
+
+Then, our controller can now receive the criteria directly:
+
+```php
+namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(ProductSearchCriteria $criteria)
+    {
+        $results = $this->catalog->productsMatching($criteria);
+
+        // Pass your results to the view
+    }
+}
+```
+
+### Registering several modules
+
+If you have more than one module you can register all your controllers and services in
+a single place by using the classes `Controllers` and `Services`.
+
+In order to group all your application services you can extend the class `ComPHPPuebla\Slim\Services`
+and add all your modules service providers in the constructor by calling the method `add`
+
+```php
+namespace Application;
+
+use ComPHPPuebla\Services;
+use Modules\ProductCatalog\ProductCatalogServices;
+
+class ApplicationServices extends Services
+{
+    /**
+     * Add the providers for your modules here
+     */
+    public function __construct()
+    {
+        $this
+            ->add(new ProductCatalogServices())
+            /* ... */ //Register more modules here...
+            ->add(new DoctrineDbalProvider()) // You could integrate libraries
+            ->add(new TwigProvider()) // Using the same approach as with modules
+        ;
+    }
+}
+```
+
+Similarly you can group all your controllers definitions using the class
+`ComPHPPuebla\Slim\Controllers`. Instead of using the constructor, you need to
+add your modules controllers in the `init` method (which is called automatically)
+
+```php
+namespace Application;
+
+use ComPHPPuebla\Slim\Controllers;
+use Modules\ProductCatalog\ProductCatalogControllers;
+
+class ApplicationControllers extends Controllers
+{
+    protected function init()
+    {
+        $this
+            ->add(new ProductCatalogControllers())
+            /* ... */ //Register more modules here...
+        ;
+    }
+}
+```
+
+Then your `index.php` file would only need:
+
+```php
+require 'vendor/autoload.php';
+
+$app = new \Slim\Slim();
+
+$services = new Application\ApplicationServices();
+$services->configure($app);
+
+$controllers = new Application\ApplicationControllers();
+$controllers->register($app);
+
+$app->run();
+```
+
+## License
+
+This package is released under the MIT License.
