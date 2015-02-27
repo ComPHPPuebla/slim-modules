@@ -1,10 +1,30 @@
 {
+    "name": "comphppuebla/slim-modules",
+    "description": "Organize your Slim applications in a modular structure",
+    "license": "MIT",
+    "keywords": ["slim", "modules"],
+    "authors": [
+        {
+            "name": "Luis Montealegre",
+            "email": "montealegreluis@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "ComPHPPuebla\\": "src/"
+        }
+    },
     "require": {
         "slim/slim": "~2.5"
     },
     "autoload": {
         "psr-0": {
             "": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
         }
     }
 }
