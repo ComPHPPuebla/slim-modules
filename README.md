@@ -29,7 +29,7 @@ application.
 ```php
 namespace Modules\ProductCatalog;
 
-use ComPHPPuebla\Slim\ServiceProvider
+use ComPHPPuebla\Slim\ServiceProvider;
 use Modules\ProductCatalog\Forms\ProductInformationForm;
 
 class ProductCatalogServices implements ServiceProvider
@@ -59,7 +59,7 @@ In order to use it in your application you would register this services in your
 ```php
 require 'vendor/autoload.php';
 
-$app = new \Slim\Slim();
+$app = new Slim\Slim();
 
 $services = new Modules\ProductCatalog\ProductCatalogServices();
 $services->configure($app);
@@ -102,10 +102,10 @@ used when Slim matches the route being defined. It works the following way:
 controller in the application container using the `controller_key` part, and it will
 use the `method` part to build a valid `callable`.
 * The controller won't be instantiated unless the route is matched. The resolver
-generates a function (giving the same effect as if you were using
-`$app->container->protect`). This function will create the controller, and it will
-pass the original arguments for the route, and the request and the application itself
-as the 2 last arguments to your controller method.
+generates a function, instead of instantiating the object, (giving the same effect as
+if you were using `$app->container->protect`). This function will create the
+controller, and it will pass the original route's arguments, the request
+and the application itself as the 2 last arguments to your controller method.
 * Once the arguments are resolved it will execute the method.
 
 Let's suppose you have the following controller:
@@ -113,6 +113,8 @@ Let's suppose you have the following controller:
 ```php
 namespace Modules\ProductCatalog\Controllers;
 
+use Modules\ProductCatalog\Forms\ProductForm;
+use ProductCatalog\Catalog;
 use Twig_Environment as View
 
 class ProductController
@@ -157,7 +159,7 @@ In order to add your controllers to your application you would register them in 
 ```php
 require 'vendor/autoload.php';
 
-$app = new \Slim\Slim();
+$app = new Slim\Slim();
 
 /* Register your services first */
 
@@ -191,25 +193,29 @@ the request argument. You could remove it by registering your route the followin
 public function register(Slim $app, ControllerResolver $resolver)
 {
     $app->get('/catalog/product/edit/:id', $resolver->resolve(
-        $app, 'catalog.product_controller:showProductForm', function (array $arguments) {
+        $app,
+        'catalog.product_controller:showProductForm',
+        function (array $arguments) {
             // $arguments[0] is the product ID
             unset($arguments[1]); // Remove the request
-            // $arguments[2] is the application which we need, because of the call to `notFound`
+            // $arguments[2] is the application, we need it because of the call to `notFound`
 
             return $arguments;
-        })
+        }
     ));
 
     /* ... */
 }
 ```
 
-Method `showProductForm` would result in the following call
-`showProductForm($productId, Slim $app)`. The converter function must return an `array`
-with the arguments that will be passed to your controller. In the example above we
-removed an unnecessary argument, but we can replace the arguments completely.
+Consequently, the signature for the method `showProductForm` would result in the
+following `showProductForm($productId, Slim $app)`.
 
-Suppose you have a controller in your catalog to do products searching, this controller
+Any converter function must return an `array` with the arguments that will be passed to
+your controller. In the example above we removed an unnecessary argument, but we can
+replace the arguments completely.
+
+Suppose you have a controller in your catalog to search products. This controller
 uses the product category and a group of keywords separated by spaces to perform the
 search. Also suppose that this search criteria is passed through the query string.
 And that we are using the following criteria object:
@@ -219,49 +225,30 @@ use Modules\ProductCatalog\Criteria;
 
 class ProductSearchCriteria
 {
-    /** @var null|string */
     protected $category;
-
-    /** @var null|string */
     protected $keywords;
 
-    /**
-     * @param string $category
-     * @param string $keywords
-     */
     public function __construct($category = null, $keywords = null)
     {
         $this->category = $category;
         $this->keywords = $keywords;
     }
 
-    /**
-     * @return boolean
-     */
     public function hasCategory()
     {
         return !is_null($this->category);
     }
 
-    /**
-     * @return null|string
-     */
     public function category()
     {
         return $this->category;
     }
 
-    /**
-     * @return boolean
-     */
     public function hasKeywords()
     {
         return !is_null($this->keywords);
     }
 
-    /**
-     * @return null|string
-     */
     public function keywords()
     {
         return $this->keyword;
@@ -299,20 +286,22 @@ We could use the criteria object directly using the following arguments converte
 public function register(Slim $app, ControllerResolver $resolver)
 {
     $app->get('/catalog/product/search', $resolver->resolve(
-        $app, 'catalog.product_controller:searchProducts', function (array $arguments) {
+        $app,
+        'catalog.product_controller:searchProducts',
+        function (array $arguments) {
             // $arguments[0] is the request. Because our route does not have parameters
 
             return [new ProductSearchCriteria(
                 $arguments[0]->get('category'), $arguments[0]->get('keywords')
             )];
-        })
+        }
     ));
 
     /* ... */
 }
 ```
 
-Then, our controller can now receive the criteria directly:
+Our controller can now receive the criteria directly:
 
 ```php
 namespace Modules\ProductCatalog\Controllers;
@@ -379,7 +368,7 @@ class ApplicationControllers extends Controllers
     {
         $this
             ->add(new ProductCatalogControllers())
-            /* ... */ //Register more modules here...
+            /* ... */ //Register more controllers modules here...
         ;
     }
 }
@@ -390,7 +379,7 @@ Then your `index.php` file would only need:
 ```php
 require 'vendor/autoload.php';
 
-$app = new \Slim\Slim();
+$app = new Slim\Slim();
 
 $services = new Application\ApplicationServices();
 $services->configure($app);
