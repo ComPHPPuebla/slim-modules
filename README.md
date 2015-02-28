@@ -1,6 +1,9 @@
 # Slim modules
 
 [![Build Status](https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master)](https://travis-ci.org/ComPHPPuebla/slim-modules)
+[![Latest Stable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
+[![Latest Unstable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
+[![License](https://poser.pugx.org/comphppuebla/slim-modules/license.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
 
 This package allow you to organize your Slim applications in a modular structure.
 It provides the following features:
