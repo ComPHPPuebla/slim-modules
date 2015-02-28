@@ -57,8 +57,6 @@ In order to use it in your application you would register this services in your
 `public/index.php` file.
 
 ```php
-require 'vendor/autoload.php';
-
 $app = new Slim\Slim();
 
 $services = new Modules\ProductCatalog\ProductCatalogServices();
@@ -102,7 +100,7 @@ used when Slim matches the route being defined. It works the following way:
 controller in the application container using the `controller_key` part, and it will
 use the `method` part to build a valid `callable`.
 * The controller won't be instantiated unless the route is matched. The resolver
-generates a function, instead of instantiating the object, (giving the same effect as
+generates a function, instead of instantiating the object (giving the same effect as
 if you were using `$app->container->protect`). This function will create the
 controller, and it will pass the original route's arguments, the request
 and the application itself as the 2 last arguments to your controller method.
@@ -157,8 +155,6 @@ In order to add your controllers to your application you would register them in 
 `public/index.php` file.
 
 ```php
-require 'vendor/autoload.php';
-
 $app = new Slim\Slim();
 
 /* Register your services first */
@@ -198,7 +194,7 @@ public function register(Slim $app, ControllerResolver $resolver)
         function (array $arguments) {
             // $arguments[0] is the product ID
             unset($arguments[1]); // Remove the request
-            // $arguments[2] is the application, we need it because of the call to `notFound`
+            // $arguments[2] is our Slim application
 
             return $arguments;
         }
@@ -377,8 +373,6 @@ class ApplicationControllers extends Controllers
 Then your `index.php` file would only need:
 
 ```php
-require 'vendor/autoload.php';
-
 $app = new Slim\Slim();
 
 $services = new Application\ApplicationServices();
