@@ -1,5 +1,26 @@
 title: Slim modules
 subTitle: Organize your Slim applications in a modular structure
-baseUrl: http://ComPHPPuebla.github.io/slim-modules
+baseUrl: http://comphppuebla.github.io/slim-modules
 template:
   url: https://github.com/CouscousPHP/Template-Dark
+
+menu:
+  sections:
+    main:
+      name: Usage
+      items:
+        installation:
+          text: Installation
+          relativeUrl: docs/installation.html
+        service_providers:
+          text: Service providers
+          relativeUrl: docs/service-providers.html
+        controller_providers:
+          text: Controller providers
+          relativeUrl: docs/controller-providers.html
+        argument_converters:
+          text: Argument converters
+          relativeUrl: docs/argument-converters.html
+        grouping_definitions:
+          text: Grouping definitions
+          relativeUrl: docs/grouping-definitions.html
