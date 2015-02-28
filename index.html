@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Slim modules</title>
+
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/font-awesome.min.css">
+        <link rel="stylesheet" href="/css/highlight.tomorrow-night.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <header class="navbar navbar-default navbar-fixed-top">
+
+            <a class="navbar-brand" href="/">
+                Slim modules
+                <small class="hidden-xs hidden-sm">
+                    Organize your Slim applications in a modular structure
+                </small>
+            </a>
+
+            
+        </header>
+
+        <main class="container">
+            <div class="row">
+
+                
+                <section class="col-sm-12">
+                    <h1>Slim modules</h1>
+<p><a href="https://travis-ci.org/ComPHPPuebla/slim-modules"><img src="https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master" alt="Build Status" /></a>
+<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg" alt="Latest Stable Version" /></a>
+<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg" alt="Latest Unstable Version" /></a>
+<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/license.svg" alt="License" /></a>
+<a href="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451"><img src="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451/mini.png" alt="SensioLabsInsight" /></a></p>
+<p>This package allow you to organize your Slim applications in a modular structure.
+It provides the following features:</p>
+<ul>
+<li>Group your service definitions in service providers classes</li>
+<li>Group and configure your controllers in controller providers classes</li>
+<li>Group all your application controllers and services in single classes</li>
+</ul>
+<h2>Installation</h2>
+<p>Using composer</p>
+<pre><code class="language-bash">$ composer require comphppuebla/slim-modules:~1.0@dev</code></pre>
+<h2>Usage</h2>
+<h3>Registering services</h3>
+<p>You can register the services of your module in a single class implementing
+<code>ComPHPPuebla\Slim\ServiceProvider</code>.</p>
+<p>For instance, suppose you have a product catalog module that is part of small
+application.</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog;
+
+use ComPHPPuebla\Slim\ServiceProvider;
+use Modules\ProductCatalog\Forms\ProductInformationForm;
+
+class ProductCatalogServices implements ServiceProvider
+{
+    /**
+     * Register all your module services as usual
+     */
+    public function configure(Slim $app)
+    {
+        $this-&gt;container-&gt;singleton(
+            'catalog.product_repository', 
+            function() use ($app) {
+                return new Catalog($app-&gt;container-&gt;get('dbal.connection'));
+            }
+        );
+        $this-&gt;container-&gt;singleton(
+            'catalog.product_controller', 
+            function() use ($app) {
+                return new ProductController(
+                    $app-&gt;container-&gt;get('twig.environment'),
+                    new ProductInformationForm(),
+                    $app-&gt;container-&gt;get('catalog.product_repository')
+                );
+            }
+        );
+    }
+}</code></pre>
+<p>In order to use it in your application you would register this services in your
+<code>public/index.php</code> file.</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+$services = new Modules\ProductCatalog\ProductCatalogServices();
+$services-&gt;configure($app);
+
+$app-&gt;run();</code></pre>
+<h3>Registering routes</h3>
+<p>Following the example, you would have routes to update the information of your products.
+In order to group the routes of your module in a single class, you need to implement
+<code>ComPHPPuebla\Slim\ControllerProvider</code></p>
+<pre><code class="language-php">namespace Modules\ProductCatalog;
+
+use ComPHPPuebla\Slim\ControllerProvider;
+use ComPHPPuebla\Slim\ControllerResolver;
+use Slim\Slim;
+
+class ProductCatalogControllers implements ControllerProvider
+{
+    public function register(Slim $app, ControllerResolver $resolver)
+    {
+        $app-&gt;get('/catalog/product/edit/:id', $resolver-&gt;resolve(
+            $app, 'catalog.product_controller:showProductForm'
+        ));
+        $app-&gt;post('/catalog/product/update', $resolver-&gt;resolve(
+            $app, 'catalog.product_controller:updateProductInformation'
+        ));
+    }
+}</code></pre>
+<p>The <code>ControllerResolver</code> class resolves the controller, method, and arguments to be
+used when Slim matches the route being defined. It works the following way:</p>
+<ul>
+<li>It splits the string with the format <code>controller_key:method</code>, looking for the
+controller in the application container using the <code>controller_key</code> part, and it will
+use the <code>method</code> part to build a valid <code>callable</code>.</li>
+<li>The controller won't be instantiated unless the route is matched. The resolver
+generates a function, instead of instantiating the object (giving the same effect as
+if you were using <code>$app-&gt;container-&gt;protect</code>). This function will create the
+controller, and it will pass the original route's arguments, the request
+and the application itself as the 2 last arguments to your controller method.</li>
+<li>Once the arguments are resolved it will execute the method.</li>
+</ul>
+<p>Let's suppose you have the following controller:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+use Modules\ProductCatalog\Forms\ProductForm;
+use ProductCatalog\Catalog;
+use Twig_Environment as View
+
+class ProductController
+{
+    protected $view;
+    protected $catalog;
+    protected $form;
+
+    public function __construct(View $view, ProductForm $form, Catalog $catalog)
+    {
+        $this-&gt;view = $view;
+        $this-&gt;form = $form;
+        $this-&gt;catalog = $catalog;
+    }
+
+    public function showProductForm($productId, Request $request, Slim $app)
+    {
+        if (!$product = $this-&gt;catalog-&gt;productOf($productId)) {
+            $app-&gt;notFound();
+        }
+
+        // Populate your form and pass it to the view
+    }
+
+    public function updateProductInformation(Request $request)
+    {
+        if ($this-&gt;form-&gt;isValid($request-&gt;params()) {
+            $productInformation = $this-&gt;form-&gt;getValues();
+            $product = $this-&gt;catalog-&gt;productOf($productInformation['id']);
+            $product-&gt;update($productInformation);
+            $this-&gt;catalog-&gt;update($product);
+        }
+        // Render the form with the errors
+    }
+}</code></pre>
+<p>In order to add your controllers to your application you would register them in the
+<code>public/index.php</code> file.</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+/* Register your services first */
+
+$services = new Modules\ProductCatalog\ProductCatalogControllers();
+$services-&gt;register($app, new ComPHPPuebla\Slim\ControllerResolver());
+
+$app-&gt;run();</code></pre>
+<p>One thing to note is that your controllers methods will always have the following
+signature style by default:</p>
+<pre><code class="language-php">method(/* $route_param_1, $route_param_2, ... $route_param_n */ $request, $app)</code></pre>
+<p>The route params are optional, they depend on your route, but the request and the
+application arguments will be passed by default.</p>
+<h3>Arguments converters</h3>
+<p>You can pass an anonymous function to the <code>ControllerResolver</code> in order to modify the
+arguments passed to your controller. Suppose for instance that your method
+<code>Modules\ProductCatalog\Controllers\ProductController::showProductForm</code> does not need
+the request argument. You could remove it by registering your route the following way:</p>
+<pre><code class="language-php"># Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app-&gt;get('/catalog/product/edit/:id', $resolver-&gt;resolve(
+        $app,
+        'catalog.product_controller:showProductForm',
+        function (array $arguments) {
+            // $arguments[0] is the product ID
+            unset($arguments[1]); // Remove the request
+            // $arguments[2] is our Slim application
+
+            return $arguments;
+        }
+    ));
+
+    /* ... */
+}</code></pre>
+<p>Consequently, the signature for the method <code>showProductForm</code> would result in the
+following <code>showProductForm($productId, Slim $app)</code>.</p>
+<p>Any converter function must return an <code>array</code> with the arguments that will be passed to
+your controller. In the example above we removed an unnecessary argument, but we can
+replace the arguments completely.</p>
+<p>Suppose you have a controller in your catalog to search products. This controller
+uses the product category and a group of keywords separated by spaces to perform the
+search. Also suppose that this search criteria is passed through the query string.
+And that we are using the following criteria object:</p>
+<pre><code class="language-php">use Modules\ProductCatalog\Criteria;
+
+class ProductSearchCriteria
+{
+    protected $category;
+    protected $keywords;
+
+    public function __construct($category = null, $keywords = null)
+    {
+        $this-&gt;category = $category;
+        $this-&gt;keywords = $keywords;
+    }
+
+    public function hasCategory()
+    {
+        return !is_null($this-&gt;category);
+    }
+
+    public function category()
+    {
+        return $this-&gt;category;
+    }
+
+    public function hasKeywords()
+    {
+        return !is_null($this-&gt;keywords);
+    }
+
+    public function keywords()
+    {
+        return $this-&gt;keyword;
+    }
+}</code></pre>
+<p>Our controller should do something similar to the following:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(Request $request)
+    {
+        $results = $this-&gt;catalog-&gt;productsMatching(new ProductSearchCriteria(
+            $request-&gt;get('category'), $request-&gt;get('keywords')
+        ));
+
+        // Pass your results to the view
+    }
+}</code></pre>
+<p>We could use the criteria object directly using the following arguments converter:</p>
+<pre><code class="language-php"># Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app-&gt;get('/catalog/product/search', $resolver-&gt;resolve(
+        $app,
+        'catalog.product_controller:searchProducts',
+        function (array $arguments) {
+            // $arguments[0] is the request. Because our route does not have parameters
+
+            return [new ProductSearchCriteria(
+                $arguments[0]-&gt;get('category'), $arguments[0]-&gt;get('keywords')
+            )];
+        }
+    ));
+
+    /* ... */
+}</code></pre>
+<p>Our controller can now receive the criteria directly:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(ProductSearchCriteria $criteria)
+    {
+        $results = $this-&gt;catalog-&gt;productsMatching($criteria);
+
+        // Pass your results to the view
+    }
+}</code></pre>
+<h3>Registering several modules</h3>
+<p>If you have more than one module you can register all your controllers and services in
+a single place by using the classes <code>Controllers</code> and <code>Services</code>.</p>
+<p>In order to group all your application services you can extend the class <code>ComPHPPuebla\Slim\Services</code>
+and add all your modules service providers in the constructor by calling the method <code>add</code></p>
+<pre><code class="language-php">namespace Application;
+
+use ComPHPPuebla\Services;
+use Modules\ProductCatalog\ProductCatalogServices;
+
+class ApplicationServices extends Services
+{
+    /**
+     * Add the providers for your modules here
+     */
+    public function __construct()
+    {
+        $this
+            -&gt;add(new ProductCatalogServices())
+            /* ... */ //Register more modules here...
+            -&gt;add(new DoctrineDbalProvider()) // You could integrate libraries
+            -&gt;add(new TwigProvider()) // Using the same approach as with modules
+        ;
+    }
+}</code></pre>
+<p>Similarly you can group all your controllers definitions using the class
+<code>ComPHPPuebla\Slim\Controllers</code>. Instead of using the constructor, you need to
+add your modules controllers in the <code>init</code> method (which is called automatically)</p>
+<pre><code class="language-php">namespace Application;
+
+use ComPHPPuebla\Slim\Controllers;
+use Modules\ProductCatalog\ProductCatalogControllers;
+
+class ApplicationControllers extends Controllers
+{
+    protected function init()
+    {
+        $this
+            -&gt;add(new ProductCatalogControllers())
+            /* ... */ //Register more controllers modules here...
+        ;
+    }
+}</code></pre>
+<p>Then your <code>index.php</code> file would only need:</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+$services = new Application\ApplicationServices();
+$services-&gt;configure($app);
+
+$controllers = new Application\ApplicationControllers();
+$controllers-&gt;register($app);
+
+$app-&gt;run();</code></pre>
+<h2>Tests</h2>
+<p>Setup the test suite using Composer:</p>
+<pre><code class="language-bash">$ composer install --dev</code></pre>
+<p>Run it using PHPUnit:</p>
+<pre><code class="language-bash">$ php bin/phpunit --testdox</code></pre>
+<h2>License</h2>
+<p>This package is released under the MIT License.</p>
+                </section>
+
+            </div>
+        </main>
+
+        <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+
+        <script>
+            $(function() {
+                $("section>h1").wrap('<div class="page-header" />');
+                // Syntax highlighting
+                hljs.initHighlightingOnLoad();
+            });
+        </script>
+
+    </body>
+</html>
