@@ -71,7 +71,7 @@
 <p>If you have more than one module you can register all your controllers and services in
 a single place by using the classes <code>Controllers</code> and <code>Services</code>.</p>
 <p>In order to group all your application services you can extend the class <code>ComPHPPuebla\Slim\Services</code>
-and add all your modules service providers in the constructor by calling the method <code>add</code></p>
+and add all your modules service providers in the <code>init</code> method by calling the method <code>add</code></p>
 <pre><code class="language-php">namespace Application;
 
 use ComPHPPuebla\Services;
@@ -82,19 +82,19 @@ class ApplicationServices extends Services
     /**
      * Add the providers for your modules here
      */
-    public function __construct()
+    protected function init()
     {
         $this
             -&gt;add(new ProductCatalogServices())
-            /* ... */ //Register more modules here...
+            //Register more modules here...
             -&gt;add(new DoctrineDbalProvider()) // You could integrate libraries
             -&gt;add(new TwigProvider()) // Using the same approach as with modules
         ;
     }
 }</code></pre>
 <p>Similarly you can group all your controllers definitions using the class
-<code>ComPHPPuebla\Slim\Controllers</code>. Instead of using the constructor, you need to
-add your modules controllers in the <code>init</code> method (which is called automatically)</p>
+<code>ComPHPPuebla\Slim\Controllers</code>. Similarly, you need to add your modules
+controllers in the <code>init</code> method (which is called automatically).</p>
 <pre><code class="language-php">namespace Application;
 
 use ComPHPPuebla\Slim\Controllers;
@@ -106,20 +106,23 @@ class ApplicationControllers extends Controllers
     {
         $this
             -&gt;add(new ProductCatalogControllers())
-            /* ... */ //Register more controllers modules here...
+            //Register more controllers modules here...
         ;
     }
 }</code></pre>
 <p>Then your <code>index.php</code> file would only need:</p>
 <pre><code class="language-php">$app = new Slim\Slim();
 
-$services = new Application\ApplicationServices();
+$services = new Application\ApplicationServices($parameters);
 $services-&gt;configure($app);
 
 $controllers = new Application\ApplicationControllers();
 $controllers-&gt;register($app);
 
 $app-&gt;run();</code></pre>
+<p>Note that the <code>Services</code> class allows you to pass parameters to
+your services through the constructor. These values are passed when
+we call the <code>configure</code> method to each of the registered services.</p>
                 </section>
 
             </div>

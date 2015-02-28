@@ -110,6 +110,53 @@ $services = new Modules\ProductCatalog\ProductCatalogServices();
 $services-&gt;configure($app);
 
 $app-&gt;run();</code></pre>
+<h2>Integrating libraries</h2>
+<p>You can also use a service provider to integrate third party libraries like Twig.
+As shown in the following example:</p>
+<pre><code class="language-php">use ComPHPPuebla\Slim\ServiceProvider;
+use Slim\Slim;
+use Twig_Loader_Filesystem as Loader;
+use Twig_Environment as Environment;
+
+class TwigServiceProvider implements ServiceProvider
+{
+    /**
+     * @param Slim $app
+     * @param array $parameters
+     */
+    public function configure(Slim $app, array $parameters = [])
+    {
+        $app-&gt;container-&gt;singleton('loader', function () {
+            return new Loader($parameters['loader_paths']);
+        });
+        $app-&gt;container-&gt;singleton('twig', function () use ($app) {
+            return new Environment($app-&gt;container-&gt;get('loader'), $parameters['options']);
+        });
+    }
+}</code></pre>
+<p>Note that the interface allows you to pass parameters to your services, you can
+pass values like paths, and other configuration settings that you don't want to
+hard-code in your providers.</p>
+<p>The following is an example of what kind of values you would pass to your provider.
+They are still hard-coded to simplify the example, but this values should come from
+a configuration file or from environment variables.</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+/* other providers.. */
+
+$twig = new TwigServiceProvider();
+$twig-&gt;configure($app, [
+    'loader_paths' =&gt; 'application/templates',
+    'options' =&gt; [
+        'cache' =&gt; 'var/cache/twig',
+        'debug' =&gt; true,
+        'strict_variables' =&gt; true,
+    ],
+]);
+
+/* your modules... */
+
+$app-&gt;run();</code></pre>
                 </section>
 
             </div>
