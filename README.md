@@ -4,6 +4,7 @@
 [![Latest Stable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
 [![Latest Unstable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
 [![License](https://poser.pugx.org/comphppuebla/slim-modules/license.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
+[![SensioLabsInsight](https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451/mini.png)](https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451)
 
 This package allow you to organize your Slim applications in a modular structure.
 It provides the following features:
