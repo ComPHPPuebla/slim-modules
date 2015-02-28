@@ -67,26 +67,59 @@
 
                 
                 <section class="col-sm-offset-3 col-lg-offset-2 col-sm-9 col-lg-10">
-                    <h1>Slim modules</h1>
-<p><a href="https://travis-ci.org/ComPHPPuebla/slim-modules"><img src="https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master" alt="Build Status" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg" alt="Latest Stable Version" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg" alt="Latest Unstable Version" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/license.svg" alt="License" /></a>
-<a href="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451"><img src="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451/mini.png" alt="SensioLabsInsight" /></a></p>
-<p>This package allow you to organize your Slim applications in a modular structure.
-It provides the following features:</p>
-<ul>
-<li>Group your service definitions in service providers classes</li>
-<li>Group and configure your controllers in controller providers classes</li>
-<li>Group all your application controllers and services in single classes</li>
-</ul>
-<h2>Tests</h2>
-<p>Setup the test suite using Composer:</p>
-<pre><code class="language-bash">$ composer install --dev</code></pre>
-<p>Run it using PHPUnit:</p>
-<pre><code class="language-bash">$ php bin/phpunit --testdox</code></pre>
-<h2>License</h2>
-<p>This package is released under the MIT License.</p>
+                    <h1>Grouping definitions</h1>
+<p>If you have more than one module you can register all your controllers and services in
+a single place by using the classes <code>Controllers</code> and <code>Services</code>.</p>
+<p>In order to group all your application services you can extend the class <code>ComPHPPuebla\Slim\Services</code>
+and add all your modules service providers in the constructor by calling the method <code>add</code></p>
+<pre><code class="language-php">namespace Application;
+
+use ComPHPPuebla\Services;
+use Modules\ProductCatalog\ProductCatalogServices;
+
+class ApplicationServices extends Services
+{
+    /**
+     * Add the providers for your modules here
+     */
+    public function __construct()
+    {
+        $this
+            -&gt;add(new ProductCatalogServices())
+            /* ... */ //Register more modules here...
+            -&gt;add(new DoctrineDbalProvider()) // You could integrate libraries
+            -&gt;add(new TwigProvider()) // Using the same approach as with modules
+        ;
+    }
+}</code></pre>
+<p>Similarly you can group all your controllers definitions using the class
+<code>ComPHPPuebla\Slim\Controllers</code>. Instead of using the constructor, you need to
+add your modules controllers in the <code>init</code> method (which is called automatically)</p>
+<pre><code class="language-php">namespace Application;
+
+use ComPHPPuebla\Slim\Controllers;
+use Modules\ProductCatalog\ProductCatalogControllers;
+
+class ApplicationControllers extends Controllers
+{
+    protected function init()
+    {
+        $this
+            -&gt;add(new ProductCatalogControllers())
+            /* ... */ //Register more controllers modules here...
+        ;
+    }
+}</code></pre>
+<p>Then your <code>index.php</code> file would only need:</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+$services = new Application\ApplicationServices();
+$services-&gt;configure($app);
+
+$controllers = new Application\ApplicationControllers();
+$controllers-&gt;register($app);
+
+$app-&gt;run();</code></pre>
                 </section>
 
             </div>

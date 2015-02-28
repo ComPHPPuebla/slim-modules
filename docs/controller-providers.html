@@ -67,26 +67,91 @@
 
                 
                 <section class="col-sm-offset-3 col-lg-offset-2 col-sm-9 col-lg-10">
-                    <h1>Slim modules</h1>
-<p><a href="https://travis-ci.org/ComPHPPuebla/slim-modules"><img src="https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master" alt="Build Status" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg" alt="Latest Stable Version" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg" alt="Latest Unstable Version" /></a>
-<a href="https://packagist.org/packages/comphppuebla/slim-modules"><img src="https://poser.pugx.org/comphppuebla/slim-modules/license.svg" alt="License" /></a>
-<a href="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451"><img src="https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451/mini.png" alt="SensioLabsInsight" /></a></p>
-<p>This package allow you to organize your Slim applications in a modular structure.
-It provides the following features:</p>
+                    <h1>Controller providers</h1>
+<p>Following the example, you would have routes to update the information of your products.
+In order to group the routes of your module in a single class, you need to implement
+<code>ComPHPPuebla\Slim\ControllerProvider</code></p>
+<pre><code class="language-php">namespace Modules\ProductCatalog;
+
+use ComPHPPuebla\Slim\ControllerProvider;
+use ComPHPPuebla\Slim\ControllerResolver;
+use Slim\Slim;
+
+class ProductCatalogControllers implements ControllerProvider
+{
+    public function register(Slim $app, ControllerResolver $resolver)
+    {
+        $app-&gt;get('/catalog/product/edit/:id', $resolver-&gt;resolve(
+            $app, 'catalog.product_controller:showProductForm'
+        ));
+        $app-&gt;post('/catalog/product/update', $resolver-&gt;resolve(
+            $app, 'catalog.product_controller:updateProductInformation'
+        ));
+    }
+}</code></pre>
+<p>The <code>ControllerResolver</code> class resolves the controller, method, and arguments to be
+used when Slim matches the route being defined. It works the following way:</p>
 <ul>
-<li>Group your service definitions in service providers classes</li>
-<li>Group and configure your controllers in controller providers classes</li>
-<li>Group all your application controllers and services in single classes</li>
+<li>It splits the string with the format <code>controller_key:method</code>, looking for the
+controller in the application container using the <code>controller_key</code> part, and it will
+use the <code>method</code> part to build a valid <code>callable</code>.</li>
+<li>The controller won't be instantiated unless the route is matched. The resolver
+generates a function, instead of instantiating the object (giving the same effect as
+if you were using <code>$app-&gt;container-&gt;protect</code>). This function will create the
+controller, and it will pass the original route's arguments, the request
+and the application itself as the 2 last arguments to your controller method.</li>
+<li>Once the arguments are resolved it will execute the method.</li>
 </ul>
-<h2>Tests</h2>
-<p>Setup the test suite using Composer:</p>
-<pre><code class="language-bash">$ composer install --dev</code></pre>
-<p>Run it using PHPUnit:</p>
-<pre><code class="language-bash">$ php bin/phpunit --testdox</code></pre>
-<h2>License</h2>
-<p>This package is released under the MIT License.</p>
+<p>Let's suppose you have the following controller:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+use Modules\ProductCatalog\Forms\ProductForm;
+use ProductCatalog\Catalog;
+use Twig_Environment as View
+
+class ProductController
+{
+    protected $view;
+    protected $catalog;
+    protected $form;
+
+    public function __construct(View $view, ProductForm $form, Catalog $catalog)
+    {
+        $this-&gt;view = $view;
+        $this-&gt;form = $form;
+        $this-&gt;catalog = $catalog;
+    }
+
+    public function showProductForm($productId, Request $request, Slim $app)
+    {
+        if (!$product = $this-&gt;catalog-&gt;productOf($productId)) {
+            $app-&gt;notFound();
+        }
+
+        // Populate your form and pass it to the view
+    }
+
+    public function updateProductInformation(Request $request)
+    {
+        if ($this-&gt;form-&gt;isValid($request-&gt;params()) {
+            $productInformation = $this-&gt;form-&gt;getValues();
+            $product = $this-&gt;catalog-&gt;productOf($productInformation['id']);
+            $product-&gt;update($productInformation);
+            $this-&gt;catalog-&gt;update($product);
+        }
+        // Render the form with the errors
+    }
+}</code></pre>
+<p>In order to add your controllers to your application you would register them in the
+<code>public/index.php</code> file.</p>
+<pre><code class="language-php">$app = new Slim\Slim();
+
+/* Register your services first */
+
+$services = new Modules\ProductCatalog\ProductCatalogControllers();
+$services-&gt;register($app, new ComPHPPuebla\Slim\ControllerResolver());
+
+$app-&gt;run();</code></pre>
                 </section>
 
             </div>

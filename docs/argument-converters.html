@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Slim modules</title>
+
+        <link rel="stylesheet" href="http://comphppuebla.github.io/slim-modules/css/bootstrap.min.css">
+        <link rel="stylesheet" href="http://comphppuebla.github.io/slim-modules/css/font-awesome.min.css">
+        <link rel="stylesheet" href="http://comphppuebla.github.io/slim-modules/css/highlight.tomorrow-night.css">
+        <link rel="stylesheet" href="http://comphppuebla.github.io/slim-modules/css/main.css">
+    </head>
+    <body>
+
+        <header class="navbar navbar-default navbar-fixed-top">
+
+            <a class="navbar-brand" href="http://comphppuebla.github.io/slim-modules/">
+                Slim modules
+                <small class="hidden-xs hidden-sm">
+                    Organize your Slim applications in a modular structure
+                </small>
+            </a>
+
+            
+        </header>
+
+        <main class="container-fluid">
+            <div class="row">
+
+                
+                    <nav id="sidebar" class="col-sm-3 col-lg-2" role="navigation">
+
+                                                    <p class="text-muted">
+                                Usage
+                            </p>
+
+                            <ul class="nav nav-pills nav-stacked">
+                                                                    <li class="">
+                                        <a href="http://comphppuebla.github.io/slim-modules/docs/installation.html">
+                                            Installation
+                                        </a>
+                                    </li>
+                                                                    <li class="">
+                                        <a href="http://comphppuebla.github.io/slim-modules/docs/service-providers.html">
+                                            Service providers
+                                        </a>
+                                    </li>
+                                                                    <li class="">
+                                        <a href="http://comphppuebla.github.io/slim-modules/docs/controller-providers.html">
+                                            Controller providers
+                                        </a>
+                                    </li>
+                                                                    <li class="">
+                                        <a href="http://comphppuebla.github.io/slim-modules/docs/argument-converters.html">
+                                            Argument converters
+                                        </a>
+                                    </li>
+                                                                    <li class="">
+                                        <a href="http://comphppuebla.github.io/slim-modules/docs/grouping-definitions.html">
+                                            Grouping definitions
+                                        </a>
+                                    </li>
+                                                            </ul>
+                        
+                    </nav>
+
+                
+                <section class="col-sm-offset-3 col-lg-offset-2 col-sm-9 col-lg-10">
+                    <h1>Argument converters</h1>
+<p>One thing to note is that your controllers methods will always have the following
+signature style by default:</p>
+<pre><code class="language-php">method(/* $route_param_1, $route_param_2, ... $route_param_n */ $request, $app)</code></pre>
+<p>The route params are optional, they depend on your route, but the request and the
+application arguments will be passed by default.</p>
+<h2>Modifying arguments</h2>
+<p>You can pass an anonymous function to the <code>ControllerResolver</code> in order to modify the
+arguments passed to your controller. Suppose for instance that your method
+<code>Modules\ProductCatalog\Controllers\ProductController::showProductForm</code> does not need
+the request argument. You could remove it by registering your route the following way:</p>
+<pre><code class="language-php"># Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app-&gt;get('/catalog/product/edit/:id', $resolver-&gt;resolve(
+        $app,
+        'catalog.product_controller:showProductForm',
+        function (array $arguments) {
+            // $arguments[0] is the product ID
+            unset($arguments[1]); // Remove the request
+            // $arguments[2] is our Slim application
+
+            return $arguments;
+        }
+    ));
+
+    /* ... */
+}</code></pre>
+<p>Consequently, the signature for the method <code>showProductForm</code> would result in the
+following <code>showProductForm($productId, Slim $app)</code>.</p>
+<p>Any converter function must return an <code>array</code> with the arguments that will be passed to
+your controller. In the example above we removed an unnecessary argument, but we can
+replace the arguments completely.</p>
+<h2>Replacing arguments</h2>
+<p>Suppose you have a controller in your catalog to search products. This controller
+uses the product category and a group of keywords separated by spaces to perform the
+search. Also suppose that this search criteria is passed through the query string.
+And that we are using the following criteria object:</p>
+<pre><code class="language-php">use Modules\ProductCatalog\Criteria;
+
+class ProductSearchCriteria
+{
+    protected $category;
+    protected $keywords;
+
+    public function __construct($category = null, $keywords = null)
+    {
+        $this-&gt;category = $category;
+        $this-&gt;keywords = $keywords;
+    }
+
+    public function hasCategory()
+    {
+        return !is_null($this-&gt;category);
+    }
+
+    public function category()
+    {
+        return $this-&gt;category;
+    }
+
+    public function hasKeywords()
+    {
+        return !is_null($this-&gt;keywords);
+    }
+
+    public function keywords()
+    {
+        return $this-&gt;keyword;
+    }
+}</code></pre>
+<p>Our controller should do something similar to the following:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(Request $request)
+    {
+        $results = $this-&gt;catalog-&gt;productsMatching(new ProductSearchCriteria(
+            $request-&gt;get('category'), $request-&gt;get('keywords')
+        ));
+
+        // Pass your results to the view
+    }
+}</code></pre>
+<p>We could use the criteria object directly using the following arguments converter:</p>
+<pre><code class="language-php"># Modules\ProductCatalog\ProductCatalogControllers
+
+public function register(Slim $app, ControllerResolver $resolver)
+{
+    $app-&gt;get('/catalog/product/search', $resolver-&gt;resolve(
+        $app,
+        'catalog.product_controller:searchProducts',
+        function (array $arguments) {
+            // $arguments[0] is the request. Because our route does not have parameters
+
+            return [new ProductSearchCriteria(
+                $arguments[0]-&gt;get('category'), $arguments[0]-&gt;get('keywords')
+            )];
+        }
+    ));
+
+    /* ... */
+}</code></pre>
+<p>Our controller can now receive the criteria directly:</p>
+<pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
+
+/* .. */
+
+class SearchController
+{
+    /* ... */
+
+    public function searchProducts(ProductSearchCriteria $criteria)
+    {
+        $results = $this-&gt;catalog-&gt;productsMatching($criteria);
+
+        // Pass your results to the view
+    }
+}</code></pre>
+                </section>
+
+            </div>
+        </main>
+
+        <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+        <script src="http://yandex.st/highlightjs/7.5/highlight.min.js"></script>
+
+        <script>
+            $(function() {
+                $("section>h1").wrap('<div class="page-header" />');
+                // Syntax highlighting
+                hljs.initHighlightingOnLoad();
+            });
+        </script>
+
+    </body>
+</html>
