@@ -9,9 +9,9 @@
 This package allow you to organize your Slim applications in a modular structure.
 It provides the following features:
 
-* Ability to group your services in modules
-* Ability to group and configure your controllers in modules
-* Ability to group all your application controllers and services
+* Group your service definitions in service providers classes
+* Group and configure your controllers in controller providers classes
+* Group all your application controllers and services in single classes
 
 ## Installation
 
@@ -45,16 +45,22 @@ class ProductCatalogServices implements ServiceProvider
      */
     public function configure(Slim $app)
     {
-        $this->container->singleton('catalog.product_repository', function() use ($app) {
-            return new Catalog($app->container->get('dbal.connection'));
-        });
-        $this->container->singleton('catalog.product_controller', function() use ($app) {
-            return new ProductController(
-                $app->container->get('twig.environment'),
-                new ProductInformationForm(),
-                $app->container->get('catalog.product_repository')
-            );
-        });
+        $this->container->singleton(
+            'catalog.product_repository',
+            function() use ($app) {
+                return new Catalog($app->container->get('dbal.connection'));
+            }
+        );
+        $this->container->singleton(
+            'catalog.product_controller',
+            function() use ($app) {
+                return new ProductController(
+                    $app->container->get('twig.environment'),
+                    new ProductInformationForm(),
+                    $app->container->get('catalog.product_repository')
+                );
+            }
+        );
     }
 }
 ```
@@ -390,7 +396,7 @@ $controllers->register($app);
 $app->run();
 ```
 
-## Unit Tests
+## Tests
 
 Setup the test suite using Composer:
 
