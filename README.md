@@ -1,5 +1,7 @@
 # Slim modules
 
+[![Build Status](https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master)](https://travis-ci.org/ComPHPPuebla/slim-modules)
+
 This package allow you to organize your Slim applications in a modular structure.
 It provides the following features:
 
@@ -382,6 +384,20 @@ $controllers = new Application\ApplicationControllers();
 $controllers->register($app);
 
 $app->run();
+```
+
+## Unit Tests
+
+Setup the test suite using Composer:
+
+```bash
+$ composer install --dev
+```
+
+Run it using PHPUnit:
+
+```bash
+$ php bin/phpunit --testdox
 ```
 
 ## License
