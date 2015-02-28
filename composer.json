@@ -9,11 +9,6 @@
             "email": "montealegreluis@gmail.com"
         }
     ],
-    "autoload": {
-        "psr-0": {
-            "ComPHPPuebla\\": "src/"
-        }
-    },
     "require": {
         "php": ">=5.5",
         "slim/slim": "~2.5"
@@ -22,9 +17,10 @@
         "phpunit/phpunit": "~4.5"
     },
     "autoload": {
-        "psr-0": {
-            "": "src/"
-        }
+        "psr-4": {"ComPHPPuebla\\Slim\\": "src"}
+    },
+    "autoload-dev": {
+        "psr-4": {"ComPHPPuebla\\Slim\\": "tests"}
     },
     "config": {
         "bin-dir": "bin/"
