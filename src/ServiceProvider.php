@@ -12,5 +12,10 @@ use Slim\Slim;
 
 interface ServiceProvider
 {
-    public function configure(Slim $app);
+    /**
+     * @param Slim $app
+     * @param array $parameters
+     * @return void
+     */
+    public function configure(Slim $app, array $parameters = []);
 }

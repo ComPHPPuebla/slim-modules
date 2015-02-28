@@ -10,17 +10,40 @@ namespace ComPHPPuebla\Slim;
 
 use Slim\Slim;
 
-class Services implements ServiceProvider
+class Services
 {
     /** @var ServiceProvider[] */
-    protected $providers = [];
+    private $providers = [];
+
+    /** @var array */
+    protected $parameters;
+
+    /**
+     * @param array $parameters
+     */
+    public function __construct(array $parameters = [])
+    {
+        $this->parameters = $parameters;
+    }
+
+    /**
+     * Override this in subclasses to add your module's services
+     *
+     * This method will be called at the beginning of ComPHPPuebla\Slim\Services::configure
+     */
+    protected function init()
+    {
+    }
 
     /**
      * @param ServiceProvider $provider
+     * @return Services
      */
     public function add(ServiceProvider $provider)
     {
         $this->providers[] = $provider;
+
+        return $this;
     }
 
     /**
@@ -30,9 +53,11 @@ class Services implements ServiceProvider
      */
     public function configure(Slim $app)
     {
+        $this->init();
+
         /** @var ServiceProvider $provider */
         foreach ($this->providers as $provider) {
-            $provider->configure($app);
+            $provider->configure($app, $this->parameters);
         }
     }
 }

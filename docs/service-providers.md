@@ -52,3 +52,60 @@ $services->configure($app);
 
 $app->run();
 ```
+
+## Integrating libraries
+
+You can also use a service provider to integrate third party libraries like Twig.
+As shown in the following example:
+
+```php
+use ComPHPPuebla\Slim\ServiceProvider;
+use Slim\Slim;
+use Twig_Loader_Filesystem as Loader;
+use Twig_Environment as Environment;
+
+class TwigServiceProvider implements ServiceProvider
+{
+    /**
+     * @param Slim $app
+     * @param array $parameters
+     */
+    public function configure(Slim $app, array $parameters = [])
+    {
+        $app->container->singleton('loader', function () {
+            return new Loader($parameters['loader_paths']);
+        });
+        $app->container->singleton('twig', function () use ($app) {
+            return new Environment($app->container->get('loader'), $parameters['options']);
+        });
+    }
+}
+```
+
+Note that the interface allows you to pass parameters to your services, you can
+pass values like paths, and other configuration settings that you don't want to
+hard-code in your providers.
+
+The following is an example of what kind of values you would pass to your provider.
+They are still hard-coded to simplify the example, but this values should come from
+a configuration file or from environment variables.
+
+```php
+$app = new Slim\Slim();
+
+/* other providers.. */
+
+$twig = new TwigServiceProvider();
+$twig->configure($app, [
+    'loader_paths' => 'application/templates',
+    'options' => [
+        'cache' => 'var/cache/twig',
+        'debug' => true,
+        'strict_variables' => true,
+    ],
+]);
+
+/* your modules... */
+
+$app->run();
+```

@@ -28,9 +28,9 @@ class Controllers
     }
 
     /**
-     * Override this in subclasses to add your module's providers
+     * Override this in subclasses to add your module's controllers
      *
-     * This method will be called at the beginning of ComPHPPuebla\Controllers::register
+     * This method will be called at the beginning of ComPHPPuebla\Slim\Controllers::register
      */
     protected function init()
     {
@@ -38,10 +38,13 @@ class Controllers
 
     /**
      * @param ControllerProvider $provider
+     * @return Controllers
      */
     public function add(ControllerProvider $provider)
     {
         $this->providers[] = $provider;
+
+        return $this;
     }
 
     /**
