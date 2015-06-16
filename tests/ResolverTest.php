@@ -158,7 +158,7 @@ class ResolverTest extends TestCase
             return new stdClass();
         });
 
-        $resolver->extend($app, 'service', function(stdClass $service, Slim $app) {
+        $resolver->extend($app, 'service', function(stdClass $service) {
             $service->modified = true;
 
             return $service;
@@ -180,12 +180,12 @@ class ResolverTest extends TestCase
             return new stdClass();
         });
 
-        $resolver->extend($app, 'service', function(stdClass $service, Slim $app) {
+        $resolver->extend($app, 'service', function(stdClass $service) {
             $service->first = true;
 
             return $service;
         });
-        $resolver->extend($app, 'service', function(stdClass $service, Slim $app) {
+        $resolver->extend($app, 'service', function(stdClass $service) {
             $service->second = true;
 
             return $service;

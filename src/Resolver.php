@@ -62,10 +62,10 @@ class Resolver
         unset($services[$key]);
         $app->container->replace($services);
 
-        $app->container->singleton($key, function() use ($original, $app, $key, $extension) {
+        $app->container->singleton($key, function() use ($original, $app, $extension) {
 
             // Execute the original factory before calling, its extension
-            return call_user_func_array($extension, [$original($app), $app]);
+            return call_user_func_array($extension, [$original($app)]);
         });
     }
 }
