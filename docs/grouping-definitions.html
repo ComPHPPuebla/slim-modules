@@ -75,7 +75,6 @@ and add all your modules service providers in the <code>init</code> method by ca
 <pre><code class="language-php">namespace Application;
 
 use ComPHPPuebla\Services;
-use Modules\ProductCatalog\ProductCatalogServices;
 
 class ApplicationServices extends Services
 {
@@ -98,7 +97,6 @@ controllers in the <code>init</code> method (which is called automatically).</p>
 <pre><code class="language-php">namespace Application;
 
 use ComPHPPuebla\Slim\Controllers;
-use Modules\ProductCatalog\ProductCatalogControllers;
 
 class ApplicationControllers extends Controllers
 {
@@ -112,11 +110,12 @@ class ApplicationControllers extends Controllers
 }</code></pre>
 <p>Then your <code>index.php</code> file would only need:</p>
 <pre><code class="language-php">$app = new Slim\Slim();
+$resolver = new ComPHPPuebla\Slim\Resolver();
 
-$services = new Application\ApplicationServices($parameters);
+$services = new Application\ApplicationServices($resolver, $parameters);
 $services-&gt;configure($app);
 
-$controllers = new Application\ApplicationControllers();
+$controllers = new Application\ApplicationControllers($resolver);
 $controllers-&gt;register($app);
 
 $app-&gt;run();</code></pre>

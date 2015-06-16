@@ -74,12 +74,12 @@ In order to group the routes of your module in a single class, you need to imple
 <pre><code class="language-php">namespace Modules\ProductCatalog;
 
 use ComPHPPuebla\Slim\ControllerProvider;
-use ComPHPPuebla\Slim\ControllerResolver;
+use ComPHPPuebla\Slim\Resolver;
 use Slim\Slim;
 
 class ProductCatalogControllers implements ControllerProvider
 {
-    public function register(Slim $app, ControllerResolver $resolver)
+    public function register(Slim $app, Resolver $resolver)
     {
         $app-&gt;get('/catalog/product/edit/:id', $resolver-&gt;resolve(
             $app, 'catalog.product_controller:showProductForm'
@@ -89,7 +89,7 @@ class ProductCatalogControllers implements ControllerProvider
         ));
     }
 }</code></pre>
-<p>The <code>ControllerResolver</code> class resolves the controller, method, and arguments to be
+<p>The <code>Resolver</code> class resolves the controller, method, and arguments to be
 used when Slim matches the route being defined. It works the following way:</p>
 <ul>
 <li>It splits the string with the format <code>controller_key:method</code>, looking for the
@@ -99,10 +99,10 @@ use the <code>method</code> part to build a valid <code>callable</code>.</li>
 generates a function, instead of instantiating the object (giving the same effect as
 if you were using <code>$app-&gt;container-&gt;protect</code>). This function will create the
 controller, and it will pass the original route's arguments, the request
-and the application itself as the 2 last arguments to your controller method.</li>
+and the Slim application as arguments to your controller method.</li>
 <li>Once the arguments are resolved it will execute the method.</li>
 </ul>
-<p>Let's suppose you have the following controller:</p>
+<p>Let's suppose the controller you registered in your provider is as follows:</p>
 <pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
 
 use Modules\ProductCatalog\Forms\ProductForm;
@@ -134,22 +134,21 @@ class ProductController
     public function updateProductInformation(Request $request)
     {
         if ($this-&gt;form-&gt;isValid($request-&gt;params()) {
-            $productInformation = $this-&gt;form-&gt;getValues();
-            $product = $this-&gt;catalog-&gt;productOf($productInformation['id']);
-            $product-&gt;update($productInformation);
+            $product = $this-&gt;catalog-&gt;productOf($this-&gt;form-&gt;getProductId());
+            $product-&gt;update($this-&gt;form-&gt;getValues());
             $this-&gt;catalog-&gt;update($product);
         }
         // Render the form with the errors
     }
 }</code></pre>
-<p>In order to add your controllers to your application you would register them in the
-<code>public/index.php</code> file.</p>
+<p>In order to add your controller to your application you would register it in your
+<code>index</code> file.</p>
 <pre><code class="language-php">$app = new Slim\Slim();
 
 /* Register your services first */
 
-$services = new Modules\ProductCatalog\ProductCatalogControllers();
-$services-&gt;register($app, new ComPHPPuebla\Slim\ControllerResolver());
+$controllers = new Modules\ProductCatalog\ProductCatalogControllers();
+$controllers-&gt;register($app, new ComPHPPuebla\Slim\Resolver());
 
 $app-&gt;run();</code></pre>
                 </section>

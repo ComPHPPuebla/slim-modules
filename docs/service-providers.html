@@ -68,29 +68,28 @@
                 
                 <section class="col-sm-offset-3 col-lg-offset-2 col-sm-9 col-lg-10">
                     <h1>Service providers</h1>
-<p>You can register the services of your module in a single class implementing
-<code>ComPHPPuebla\Slim\ServiceProvider</code>.</p>
-<p>For instance, suppose you have a product catalog module that is part of small
-application.</p>
+<p>You can package your module's services definitions in a single class implementing
+<code>ComPHPPuebla\Slim\ServiceProvider</code> interface.</p>
+<p>Suppose you have a product catalog module that is part of a small application.</p>
 <pre><code class="language-php">namespace Modules\ProductCatalog;
 
 use ComPHPPuebla\Slim\ServiceProvider;
-use Modules\ProductCatalog\Forms\ProductInformationForm;
+use ComPHPPuebla\Slim\Resolver;
 
 class ProductCatalogServices implements ServiceProvider
 {
     /**
      * Register all your module services as usual
      */
-    public function configure(Slim $app)
+    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
     {
-        $this-&gt;container-&gt;singleton(
+        $app-&gt;container-&gt;singleton(
             'catalog.product_repository',
             function() use ($app) {
                 return new Catalog($app-&gt;container-&gt;get('dbal.connection'));
             }
         );
-        $this-&gt;container-&gt;singleton(
+        $app-&gt;container-&gt;singleton(
             'catalog.product_controller',
             function() use ($app) {
                 return new ProductController(
@@ -102,41 +101,38 @@ class ProductCatalogServices implements ServiceProvider
         );
     }
 }</code></pre>
-<p>In order to use it in your application you would register this services in your
-<code>public/index.php</code> file.</p>
+<p>Once you have your <code>ServiceProvider</code> definition you can configure your Slim application
+to use your module's services.</p>
 <pre><code class="language-php">$app = new Slim\Slim();
 
 $services = new Modules\ProductCatalog\ProductCatalogServices();
-$services-&gt;configure($app);
+$services-&gt;configure($app, new ComPHPPuebla\Slim\Resolver());
 
 $app-&gt;run();</code></pre>
 <h2>Integrating libraries</h2>
 <p>You can also use a service provider to integrate third party libraries like Twig.
 As shown in the following example:</p>
 <pre><code class="language-php">use ComPHPPuebla\Slim\ServiceProvider;
+use ComPHPPuebla\Slim\Resolver;
 use Slim\Slim;
 use Twig_Loader_Filesystem as Loader;
 use Twig_Environment as Environment;
 
 class TwigServiceProvider implements ServiceProvider
 {
-    /**
-     * @param Slim $app
-     * @param array $parameters
-     */
-    public function configure(Slim $app, array $parameters = [])
+    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
     {
-        $app-&gt;container-&gt;singleton('loader', function () {
+        $app-&gt;container-&gt;singleton('twig.loader', function () {
             return new Loader($parameters['loader_paths']);
         });
-        $app-&gt;container-&gt;singleton('twig', function () use ($app) {
+        $app-&gt;container-&gt;singleton('twig.environment', function () use ($app) {
             return new Environment($app-&gt;container-&gt;get('loader'), $parameters['options']);
         });
     }
 }</code></pre>
-<p>Note that the interface allows you to pass parameters to your services, you can
-pass values like paths, and other configuration settings that you don't want to
-hard-code in your providers.</p>
+<p>Note that the interface allows you to pass parameters to your services. You can
+pass values like filesystem paths, and other configuration settings that you
+don't want to hard-code in your providers.</p>
 <p>The following is an example of what kind of values you would pass to your provider.
 They are still hard-coded to simplify the example, but this values should come from
 a configuration file or from environment variables.</p>
@@ -145,7 +141,7 @@ a configuration file or from environment variables.</p>
 /* other providers.. */
 
 $twig = new TwigServiceProvider();
-$twig-&gt;configure($app, [
+$twig-&gt;configure($app, new Resolver(), [
     'loader_paths' =&gt; 'application/templates',
     'options' =&gt; [
         'cache' =&gt; 'var/cache/twig',
@@ -157,6 +153,31 @@ $twig-&gt;configure($app, [
 /* your modules... */
 
 $app-&gt;run();</code></pre>
+<h2>Extending services</h2>
+<p>If you have used Twig, you will know it is a common use case to register extensions.
+In this case you will need to extend a service definition, i. e. take the original
+service and modify it. Suppose our module needs to register its own Twig extension.
+You would have to use the <code>Resolver</code> and call its <code>extend</code> method. You will need to
+pass your Slim application, the original service key, and a callable to modify the
+original service as arguments. The callable will receive the original service object,
+followed by your Slim application as its arguments.</p>
+<pre><code class="language-php">use ComPHPPuebla\Slim\ServiceProvider;
+use ComPHPPuebla\Slim\Resolver;
+use Slim\Slim;
+use Twig_Environment as Environment;
+
+class ProductCatalogServices implements ServiceProvider
+{
+    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
+    {
+        /* More service definitions... */
+        $resolver-&gt;extend($app, 'twig.environment', function(Environment $twig, Slim $app) {
+            $twig-&gt;addExtension(new MyTwigExtension());
+
+            return $twig;
+        });
+    }
+}</code></pre>
                 </section>
 
             </div>
