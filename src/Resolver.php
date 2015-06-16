@@ -65,7 +65,7 @@ class Resolver
         $app->container->singleton($key, function() use ($original, $app, $key, $extension) {
 
             // Execute the original factory before calling, its extension
-            return call_user_func_array($extension, [$original(), $app]);
+            return call_user_func_array($extension, [$original($app), $app]);
         });
     }
 }

@@ -194,8 +194,8 @@ class ResolverTest extends TestCase
         $service = $app->container->get('service');
 
         $this->assertObjectHasAttribute('first', $service);
-        $this->assertTrue($service->modified);
+        $this->assertTrue($service->first);
         $this->assertObjectHasAttribute('second', $service);
-        $this->assertTrue($service->modified);
+        $this->assertTrue($service->second);
     }
 }
