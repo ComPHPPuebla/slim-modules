@@ -16,7 +16,7 @@ interface ControllerProvider
      * Register your controllers here
      *
      * @param Slim $app
-     * @param ControllerResolver $resolver
+     * @param Resolver $resolver
      */
-    public function register(Slim $app, ControllerResolver $resolver);
+    public function register(Slim $app, Resolver $resolver);
 }

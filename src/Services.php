@@ -12,6 +12,9 @@ use Slim\Slim;
 
 class Services
 {
+    /** @var Resolver */
+    protected $resolver;
+
     /** @var ServiceProvider[] */
     private $providers = [];
 
@@ -19,10 +22,12 @@ class Services
     protected $parameters;
 
     /**
+     * @param Resolver
      * @param array $parameters
      */
-    public function __construct(array $parameters = [])
+    public function __construct(Resolver $resolver, array $parameters = [])
     {
+        $this->resolver = $resolver;
         $this->parameters = $parameters;
     }
 
@@ -57,7 +62,7 @@ class Services
 
         /** @var ServiceProvider $provider */
         foreach ($this->providers as $provider) {
-            $provider->configure($app, $this->parameters);
+            $provider->configure($app, $this->resolver, $this->parameters);
         }
     }
 }

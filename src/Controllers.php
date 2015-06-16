@@ -12,19 +12,19 @@ use Slim\Slim;
 
 class Controllers
 {
-    /** @var RouteProvider[] */
+    /** @var ControllerProvider[] */
     private $providers;
 
-    /** @var ControllerResolver */
+    /** @var Resolver */
     protected $resolver;
 
     /**
-     * @param ControllerResolver $resolver
+     * @param Resolver $resolver
      */
-    public function __construct(ControllerResolver $resolver = null)
+    public function __construct(Resolver $resolver)
     {
         $this->providers = [];
-        $this->resolver = $resolver ?: new ControllerResolver();
+        $this->resolver = $resolver;
     }
 
     /**
@@ -54,7 +54,7 @@ class Controllers
     {
         $this->init();
 
-        /** @var RouteProvider $provider */
+        /** @var ControllerProvider $provider */
         foreach ($this->providers as $provider) {
             $provider->register($app, $this->resolver);
         }

@@ -34,7 +34,7 @@ class ServicesTest extends TestCase
             ->with($app)
         ;
 
-        $services = new Services();
+        $services = new Services(new Resolver());
         $services->add($provider1);
         $services->add($provider2);
 

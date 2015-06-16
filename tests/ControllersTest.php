@@ -16,8 +16,8 @@ class ControllersTest extends TestCase
     /** @test */
     function it_should_call_its_registered_controller_providers()
     {
-        /** @var ControllerResolver $resolver */
-        $resolver = $this->getMock(ControllerResolver::class);
+        /** @var Resolver $resolver */
+        $resolver = $this->getMock(Resolver::class);
 
         $app = new Slim();
 

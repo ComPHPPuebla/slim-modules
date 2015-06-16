@@ -10,7 +10,6 @@ and add all your modules service providers in the `init` method by calling the m
 namespace Application;
 
 use ComPHPPuebla\Services;
-use Modules\ProductCatalog\ProductCatalogServices;
 
 class ApplicationServices extends Services
 {
@@ -37,7 +36,6 @@ controllers in the `init` method (which is called automatically).
 namespace Application;
 
 use ComPHPPuebla\Slim\Controllers;
-use Modules\ProductCatalog\ProductCatalogControllers;
 
 class ApplicationControllers extends Controllers
 {
@@ -55,11 +53,12 @@ Then your `index.php` file would only need:
 
 ```php
 $app = new Slim\Slim();
+$resolver = new ComPHPPuebla\Slim\Resolver();
 
-$services = new Application\ApplicationServices($parameters);
+$services = new Application\ApplicationServices($resolver, $parameters);
 $services->configure($app);
 
-$controllers = new Application\ApplicationControllers();
+$controllers = new Application\ApplicationControllers($resolver);
 $controllers->register($app);
 
 $app->run();

@@ -30,3 +30,9 @@ $ php bin/phpunit --testdox
 ## License
 
 This package is released under the MIT License.
+
+## Documentation
+
+The documentations is available at [http://comphppuebla.github.io/slim-modules/][1]
+
+[1]: http://comphppuebla.github.io/slim-modules/

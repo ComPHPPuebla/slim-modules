@@ -2,10 +2,10 @@
 <phpunit
     colors="true"
     verbose="true"
-    bootstrap="./tests/bootstrap.php">
+    bootstrap="vendor/autoload.php">
 
     <testsuites>
-        <testsuite name="integration">
+        <testsuite name="all">
             <directory>tests</directory>
         </testsuite>
     </testsuites>

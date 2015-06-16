@@ -12,7 +12,7 @@ application arguments will be passed by default.
 
 ## Modifying arguments
 
-You can pass an anonymous function to the `ControllerResolver` in order to modify the
+You can pass an anonymous function to the `Resolver` in order to modify the
 arguments passed to your controller. Suppose for instance that your method
 `Modules\ProductCatalog\Controllers\ProductController::showProductForm` does not need
 the request argument. You could remove it by registering your route the following way:
