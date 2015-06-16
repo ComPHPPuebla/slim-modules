@@ -159,8 +159,8 @@ In this case you will need to extend a service definition, i. e. take the origin
 service and modify it. Suppose our module needs to register its own Twig extension.
 You would have to use the <code>Resolver</code> and call its <code>extend</code> method. You will need to
 pass your Slim application, the original service key, and a callable to modify the
-original service as arguments. The callable will receive the original service object,
-followed by your Slim application as its arguments.</p>
+original service as arguments. The callable will receive the original service object
+as argument.</p>
 <pre><code class="language-php">use ComPHPPuebla\Slim\ServiceProvider;
 use ComPHPPuebla\Slim\Resolver;
 use Slim\Slim;
@@ -171,7 +171,7 @@ class ProductCatalogServices implements ServiceProvider
     public function configure(Slim $app, Resolver $resolver, array $parameters = [])
     {
         /* More service definitions... */
-        $resolver-&gt;extend($app, 'twig.environment', function(Environment $twig, Slim $app) {
+        $resolver-&gt;extend($app, 'twig.environment', function(Environment $twig) {
             $twig-&gt;addExtension(new MyTwigExtension());
 
             return $twig;
