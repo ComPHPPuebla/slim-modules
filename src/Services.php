@@ -19,16 +19,16 @@ class Services
     private $providers = [];
 
     /** @var array */
-    protected $parameters;
+    protected $options;
 
     /**
      * @param Resolver
-     * @param array $parameters
+     * @param array $options
      */
-    public function __construct(Resolver $resolver, array $parameters = [])
+    public function __construct(Resolver $resolver, array $options = [])
     {
         $this->resolver = $resolver;
-        $this->parameters = $parameters;
+        $this->options = $options;
     }
 
     /**
@@ -62,7 +62,7 @@ class Services
 
         /** @var ServiceProvider $provider */
         foreach ($this->providers as $provider) {
-            $provider->configure($app, $this->resolver, $this->parameters);
+            $provider->configure($app, $this->resolver, $this->options);
         }
     }
 }

@@ -15,8 +15,8 @@ interface ServiceProvider
     /**
      * @param Slim $app
      * @param Resolver $resolver
-     * @param array $parameters
+     * @param array $options
      * @return void
      */
-    public function configure(Slim $app, Resolver $resolver, array $parameters = []);
+    public function configure(Slim $app, Resolver $resolver, array $options = []);
 }
