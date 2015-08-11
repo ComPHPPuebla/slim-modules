@@ -12,6 +12,7 @@ It provides the following features:
 * Group your service definitions in service providers classes
 * Group and configure your controllers in controller providers classes
 * Group all your application controllers and services in single classes
+* Register all your application middleware in a single class
 
 ## Tests
 

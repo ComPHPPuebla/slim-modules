@@ -16,7 +16,7 @@ class ProductCatalogServices implements ServiceProvider
     /**
      * Register all your module services as usual
      */
-    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
+    public function configure(Slim $app, Resolver $resolver, array $options = [])
     {
         $app->container->singleton(
             'catalog.product_repository',
@@ -64,13 +64,13 @@ use Twig_Environment as Environment;
 
 class TwigServiceProvider implements ServiceProvider
 {
-    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
+    public function configure(Slim $app, Resolver $resolver, array $options = [])
     {
         $app->container->singleton('twig.loader', function () {
-            return new Loader($parameters['loader_paths']);
+            return new Loader($options['loader_paths']);
         });
         $app->container->singleton('twig.environment', function () use ($app) {
-            return new Environment($app->container->get('loader'), $parameters['options']);
+            return new Environment($app->container->get('loader'), $options['options']);
         });
     }
 }
@@ -122,7 +122,7 @@ use Twig_Environment as Environment;
 
 class ProductCatalogServices implements ServiceProvider
 {
-    public function configure(Slim $app, Resolver $resolver, array $parameters = [])
+    public function configure(Slim $app, Resolver $resolver, array $options = [])
     {
         /* More service definitions... */
         $resolver->extend($app, 'twig.environment', function(Environment $twig) {

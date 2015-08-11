@@ -24,3 +24,6 @@ menu:
         grouping_definitions:
           text: Grouping definitions
           relativeUrl: docs/grouping-definitions.html
+        middleware:
+          text: Application middleware
+          relativeUrl: docs/middleware.html
