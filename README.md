@@ -34,6 +34,6 @@ This package is released under the MIT License.
 
 ## Documentation
 
-The documentations is available at [http://comphppuebla.github.io/slim-modules/][1]
+The documentations is available at [https://comphppuebla.github.io/slim-modules/][1]
 
-[1]: http://comphppuebla.github.io/slim-modules/
+[1]: https://comphppuebla.github.io/slim-modules/
