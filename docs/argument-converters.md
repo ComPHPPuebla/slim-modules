@@ -7,18 +7,25 @@ signature style by default:
 method(/* $route_param_1, $route_param_2, ... $route_param_n */ $request, $app)
 ```
 
-The route params are optional, they depend on your route, but the request and the
+The route parameters are optional, they depend on your route, but the request and the
 application arguments will be passed by default.
+
+You can modify this behaviour by passing an *arguments converter function* to the 
+`Resolver::resolve` method.
+
+## Contents
+
+* [Modifying arguments](#modifying-arguments)
+* [Custom arguments](#custom-arguments)
 
 ## Modifying arguments
 
-You can pass an anonymous function to the `Resolver` in order to modify the
-arguments passed to your controller. Suppose for instance that your method
+Suppose for instance that your method
 `Modules\ProductCatalog\Controllers\ProductController::showProductForm` does not need
 the request argument. You could remove it by registering your route the following way:
 
 ```php
-# Modules\ProductCatalog\ProductCatalogControllers
+# Modules\ProductCatalog\CatalogControllerProvider
 
 public function register(Slim $app, ControllerResolver $resolver)
 {
@@ -43,9 +50,9 @@ following `showProductForm($productId, Slim $app)`.
 
 Any converter function must return an `array` with the arguments that will be passed to
 your controller. In the example above we removed an unnecessary argument, but we can
-replace the arguments completely.
+customize the arguments completely.
 
-## Replacing arguments
+## Custom arguments
 
 Suppose you have a controller in your catalog to search products. This controller
 uses the product category and a group of keywords separated by spaces to perform the
