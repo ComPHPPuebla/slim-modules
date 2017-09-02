@@ -73,16 +73,33 @@
                 
                 <section class="col-sm-offset-3 col-lg-offset-2 col-sm-9 col-lg-10">
                     <h1 id="controller-providers">Controller providers</h1>
-<p>Following the example, you would have routes to update the information of your products.
-In order to group the routes of your module in a single class, you need to implement
-<code>ComPHPPuebla\Slim\ControllerProvider</code></p>
+<p>A controller provider is a special type of service provider. A controller provider binds a service
+definition to a Slim route.</p>
+<h2 id="creating-a-controller-provider">Creating a controller provider</h2>
+<p>Following the catalog of products example, let's register some routes to update the information of
+existing products. In order to group the routes of your module in a single class, you need to
+implement the interface <code>ComPHPPuebla\Slim\ControllerProvider</code></p>
+<pre><code class="language-php">use Slim\Slim;
+
+interface ControllerProvider
+{
+    public function register(Slim $app, Resolver $resolver);
+}</code></pre>
+<p>Suppose you want to register two routes, one to show the form to edit a product (GET) and another
+to update the product information in the database (POST).</p>
 <pre><code class="language-php">namespace Modules\ProductCatalog;
 
 use ComPHPPuebla\Slim\ControllerProvider;
 use ComPHPPuebla\Slim\Resolver;
 use Slim\Slim;
 
-class ProductCatalogControllers implements ControllerProvider
+/**
+ * This provider registers to routes
+ *
+ * - `GET /catalog/product/edit/:id`
+ * - `POST /catalog/product/update`
+ */
+class CatalogControllerProvider implements ControllerProvider
 {
     public function register(Slim $app, Resolver $resolver)
     {
@@ -96,17 +113,20 @@ class ProductCatalogControllers implements ControllerProvider
 }</code></pre>
 <p>The <code>Resolver</code> class resolves the controller, method, and arguments to be
 used when Slim matches the route being defined. It works the following way:</p>
+<ol>
+<li>It splits the string with the format <code>controller_key:method</code></li>
+<li>It looks for the controller in the application container using the <code>controller_key</code> part</li>
+<li>It will use both the controller and the <code>method</code> to build a <code>callable</code> (<code>[$object, 'methodName']</code>).</li>
+<li>This callable will be wrapped in an anonymous function, that will acts as a proxy to your
+controller (similar to <code>$app-&gt;container-&gt;protect</code> which returns a function instead of the object).
+This &quot;controller function&quot; has the following characteristics:
 <ul>
-<li>It splits the string with the format <code>controller_key:method</code>, looking for the
-controller in the application container using the <code>controller_key</code> part, and it will
-use the <code>method</code> part to build a valid <code>callable</code>.</li>
-<li>The controller won't be instantiated unless the route is matched. The resolver
-generates a function, instead of instantiating the object (giving the same effect as
-if you were using <code>$app-&gt;container-&gt;protect</code>). This function will create the
-controller, and it will pass the original route's arguments, the request
-and the Slim application as arguments to your controller method.</li>
-<li>Once the arguments are resolved it will execute the method.</li>
-</ul>
+<li>It will create your controller once the route is matched </li>
+<li>It will pass the original route's arguments, as well as the request and the Slim application
+to your controller method</li>
+<li>It will execute the controller method</li>
+</ul></li>
+</ol>
 <p>Let's suppose the controller you registered in your provider is as follows:</p>
 <pre><code class="language-php">namespace Modules\ProductCatalog\Controllers;
 
@@ -127,6 +147,9 @@ class ProductController
         $this-&gt;catalog = $catalog;
     }
 
+    /**
+     * @param int $productId The `:id` coming from the path `/catalog/product/edit/:id`
+     */
     public function showProductForm($productId, Request $request, Slim $app)
     {
         if (!$product = $this-&gt;catalog-&gt;productOf($productId)) {
@@ -136,23 +159,27 @@ class ProductController
         // Populate your form and pass it to the view
     }
 
+    /**
+     * When there are no parameters in the path, like in this case: `/catalog/product/update`.
+     * The first argument will be the `Request` object, then the Slim application
+     */ 
     public function updateProductInformation(Request $request)
     {
         if ($this-&gt;form-&gt;isValid($request-&gt;params()) {
-            $product = $this-&gt;catalog-&gt;productOf($this-&gt;form-&gt;getProductId());
+            $product = $this-&gt;catalog-&gt;productWith($this-&gt;form-&gt;getProductId());
             $product-&gt;update($this-&gt;form-&gt;getValues());
             $this-&gt;catalog-&gt;update($product);
         }
         // Render the form with the errors
     }
 }</code></pre>
-<p>In order to add your controller to your application you would register it in your
+<p>In order to add your controllers to your application you would register the provider in your
 <code>index</code> file.</p>
 <pre><code class="language-php">$app = new Slim\Slim();
 
 /* Register your services first */
 
-$controllers = new Modules\ProductCatalog\ProductCatalogControllers();
+$controllers = new Modules\ProductCatalog\CatalogControllerProvider();
 $controllers-&gt;register($app, new ComPHPPuebla\Slim\Resolver());
 
 $app-&gt;run();</code></pre>
