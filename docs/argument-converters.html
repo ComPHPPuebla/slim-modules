@@ -48,7 +48,7 @@
                                     </li>
                                                                     <li class="">
                                         <a href="https://comphppuebla.github.io/slim-modules/docs/controller-providers.html">
-                                            Controller providers
+                                            Route providers
                                         </a>
                                     </li>
                                                                     <li class="">
@@ -58,7 +58,7 @@
                                     </li>
                                                                     <li class="">
                                         <a href="https://comphppuebla.github.io/slim-modules/docs/grouping-definitions.html">
-                                            Grouping definitions
+                                            Definition Groups
                                         </a>
                                     </li>
                                                                     <li class="">
@@ -76,14 +76,20 @@
 <p>One thing to note is that your controllers methods will always have the following
 signature style by default:</p>
 <pre><code class="language-php">method(/* $route_param_1, $route_param_2, ... $route_param_n */ $request, $app)</code></pre>
-<p>The route params are optional, they depend on your route, but the request and the
+<p>The route parameters are optional, they depend on your route, but the request and the
 application arguments will be passed by default.</p>
+<p>You can modify this behaviour by passing an <em>arguments converter function</em> to the
+<code>Resolver::resolve</code> method.</p>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#modifying-arguments">Modifying arguments</a></li>
+<li><a href="#custom-arguments">Custom arguments</a></li>
+</ul>
 <h2 id="modifying-arguments">Modifying arguments</h2>
-<p>You can pass an anonymous function to the <code>Resolver</code> in order to modify the
-arguments passed to your controller. Suppose for instance that your method
+<p>Suppose for instance that your method
 <code>Modules\ProductCatalog\Controllers\ProductController::showProductForm</code> does not need
 the request argument. You could remove it by registering your route the following way:</p>
-<pre><code class="language-php"># Modules\ProductCatalog\ProductCatalogControllers
+<pre><code class="language-php"># Modules\ProductCatalog\CatalogControllerProvider
 
 public function register(Slim $app, ControllerResolver $resolver)
 {
@@ -105,8 +111,8 @@ public function register(Slim $app, ControllerResolver $resolver)
 following <code>showProductForm($productId, Slim $app)</code>.</p>
 <p>Any converter function must return an <code>array</code> with the arguments that will be passed to
 your controller. In the example above we removed an unnecessary argument, but we can
-replace the arguments completely.</p>
-<h2 id="replacing-arguments">Replacing arguments</h2>
+customize the arguments completely.</p>
+<h2 id="custom-arguments">Custom arguments</h2>
 <p>Suppose you have a controller in your catalog to search products. This controller
 uses the product category and a group of keywords separated by spaces to perform the
 search. Also suppose that this search criteria is passed through the query string.
