@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/ComPHPPuebla/slim-modules.svg?branch=master)](https://travis-ci.org/ComPHPPuebla/slim-modules)
 [![Latest Stable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/stable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
-[![Latest Unstable Version](https://poser.pugx.org/comphppuebla/slim-modules/v/unstable.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
-[![License](https://poser.pugx.org/comphppuebla/slim-modules/license.svg)](https://packagist.org/packages/comphppuebla/slim-modules)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451/mini.png)](https://insight.sensiolabs.com/projects/b86318b0-47ce-4d47-a0a4-db6e98dc8451)
 
 This package allows you to organize your Slim applications in a modular structure. By introducing
@@ -20,7 +18,7 @@ the following components
 Setup the test suite using Composer:
 
 ```bash
-$ composer install --dev
+$ composer install
 ```
 
 Run it using PHPUnit:
@@ -32,9 +30,3 @@ $ php bin/phpunit --testdox
 ## License
 
 This package is released under the MIT License.
-
-## Documentation
-
-The documentations is available at [https://comphppuebla.github.io/slim-modules/][1]
-
-[1]: https://comphppuebla.github.io/slim-modules/
